@@ -1,4 +1,4 @@
-# Crypto Platform
+# Cryptora
 
 ## Overview
 This project is a cryptocurrency platform built using Django and Web3. It allows users to manage their cryptocurrency portfolios, perform transactions, and interact with blockchain-based smart contracts. The platform integrates with Binance and CoinGecko APIs for live price data and market information.
@@ -95,7 +95,7 @@ To ensure the platform works as expected, test cases have been implemented. Foll
 
 1. Navigate to the project directory:
    ```bash
-   cd crypto_platform
+   cd cryptora
    ```
 
 2. Run the tests using Django's test framework:
