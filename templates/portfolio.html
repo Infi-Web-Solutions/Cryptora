@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load holdings_extras %}
+
+{% block content %}
+<div class="container mt-5 text-white">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Your Portfolio</h2>
+        <form method="get" action="">
+            <button type="submit" class="btn btn-outline-info btn-sm">Refresh Portfolio</button>
+        </form>
+    </div>
+
+    <!-- Wallet Address -->
+    <div class="bg-dark p-3 rounded mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+    <strong>Wallet:</strong>
+    <span>{{ wallet }}</span>
+</div>
+    <!-- USD Balance -->
+    <div class="bg-dark p-3 rounded mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+        <strong>USD Balance:</strong> 
+        <span style="color:#3ade55;">${{ usd_balance_virtual|default:"0.00"|floatformat:2 }}</span>
+    </div>
+
+    <!-- Borrow / Repay -->
+    <div class="bg-dark p-3 rounded mb-4">
+    {% if borrowed and borrowed|floatformat:2 != '0.00' %}
+        <form method="POST" action="{% url 'repay_virtual_funds' %}" class="d-flex justify-content-between align-items-center">
+            {% csrf_token %}
+            <input type="hidden" name="amount" value="{{ borrowed }}">
+            <button type="submit" class="btn btn-warning">Repay Borrowed Funds</button>
+            <span class="text-danger fw-bold fs-5">${{ borrowed|floatformat:2 }}</span>
+        </form>
+    {% else %}
+        <form method="POST" action="{% url 'borrow_virtual_funds' %}" class="d-flex align-items-center gap-3">
+            {% csrf_token %}
+            <input type="number" name="amount" min="1" step="1" class="form-control" placeholder="Enter amount" required style="width: 150px;">
+            <button type="submit" class="btn btn-success">Borrow USD</button>
+        </form>
+    {% endif %}
+</div>
+    <!-- Holdings Summary -->
+    <div class="bg-dark p-3 rounded mb-4">
+        <h5 class="text-white mb-3">Portfolio Summary</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-secondary">
+                    <div class="card-body">
+                        <h6 class="card-title">Total Holdings Value</h6>
+                        <p class="card-text display-6" style="color:#3ade55;">
+                            ${{ holdings|sum_total_value|default:"0.00"|floatformat:2 }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-secondary">
+                    <div class="card-body">
+                        <h6 class="card-title">Total Number of Assets</h6>
+                        <p class="card-text display-6">
+                            {{ holdings|count_nonzero_holdings|default:"0" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Holdings Pie Chart -->
+    <div class="card bg-dark p-3 rounded mb-4">
+        <h5 class="text-white mb-3">Holdings Breakdown</h5>
+        <div style="height: 400px; align-items: center; justify-content: center; display: flex;">
+            <canvas id="holdingsPieChart" style="border:  dark solid 0.2px"></canvas>
+        </div>
+    </div>
+
+    <!-- Coin Holdings -->
+    <div class="bg-dark p-4 rounded mb-4">
+        <h5 class="mb-3">Your Holdings</h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered text-white align-middle">
+                <thead>
+                    <tr style="text-align:center;">
+                        <th>No.</th>
+                        <th>Logo</th>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>Buy Price</th>
+                        <th>Live Price</th>
+                        <th>Quantity</th>
+                        <th>Total Value</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if filtered_holdings %}
+                        {% for coin in filtered_holdings %}
+                        <tr>
+                            <td style="text-align:center;">{{ forloop.counter }}</td>
+                            <td style="text-align:center;">
+                                {% if coin.image %}
+                                    <img src="{{ coin.image }}" alt="{{ coin.symbol }} logo" style="width: 30px; height: 30px;">
+                                {% else %}
+                                    <span class="text">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:center;" >{{ coin.symbol|upper }}</td>
+                            <td style="text-align:center;">{{ coin.name }}</td>
+                            <td style="text-align:center; color:#3ade55;">${{ coin.buy_price|floatformat:2 }}</td>
+                            <td style="text-align:center; color:#3ade55;">${{ coin.live_price|floatformat:2 }}</td>
+                            <td style="text-align:center;">{{ coin.quantity|floatformat:0 }}</td>
+                            <td style="text-align:center; color:#3ade55;">${{ coin.total_value|floatformat:2 }}</td>
+                            <td style="text-align:center;">
+                                <!-- Buy -->
+                                <form method="POST" action="{% url 'buy_coin' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="symbol" value="{{ coin.symbol }}">
+                                    <input type="hidden" name="price" value="{{ coin.live_price }}">
+                                    <input type="number" name="quantity" min="1" step="1" class="form-control form-control-sm mb-1 w-50 d-inline" placeholder="Qty" required>
+                                    <button type="submit" class="btn btn-sm btn-success">Buy</button>
+                                </form>
+                                <!-- Sell -->
+                                <form method="POST" action="{% url 'sell_coin' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="symbol" value="{{ coin.symbol }}">
+                                    <input type="hidden" name="price" value="{{ coin.live_price }}">
+                                    <input type="number" name="quantity" min="1" max="{{ coin.quantity }}" step="1" class="form-control form-control-sm mb-1 w-50 d-inline" placeholder="Qty" required {% if coin.live_price <= 0 %}disabled{% endif %}>
+                                    <button type="submit" class="btn btn-sm btn-danger" {% if coin.live_price <= 0 %}disabled{% endif %}>Sell</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="9" class="text-center">No holdings found.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% comment %} <!-- Transaction History -->
+    <div class="bg-dark p-4 rounded mb-4">
+        <h5 class="mb-3">Transaction History</h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered text-white align-middle">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Symbol</th>
+                        <th>Amount</th>
+                        <th>USD Value</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                    <tr>
+                        <td>{{ tx.type }}</td>
+                        <td>{{ tx.symbol }}</td>
+                        <td>{{ tx.amount|floatformat:2 }}</td>
+                        <td>${{ tx.usd_value|floatformat:2 }}</td>
+                        <td>{{ tx.timestamp|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center">No transactions found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div> {% endcomment %}
+
+    <!-- Watchlist -->
+    {% comment %} <div class="bg-dark p-4 rounded mb-4">
+        <h5 class="mb-3">Watchlist</h5>
+        <ul class="list-group">
+            {% for coin in watchlist %}
+            <li class="list-group-item bg-secondary text-white">{{ coin }}</li>
+            {% empty %}
+            <li class="list-group-item bg-secondary text-white">No coins in watchlist.</li>
+            {% endfor %}
+        </ul>
+    </div> {% endcomment %}
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const pieCtx = document.getElementById("holdingsPieChart");
+
+    const labels = [];
+    const data = [];
+    {% for holding in holdings %}
+        {% if holding.quantity > 0 %}
+            labels.push("{{ holding.symbol }}");
+            data.push({{ holding.total_value }});
+        {% endif %}
+    {% endfor %}
+
+    if (labels.length > 0 && data.length > 0) {
+        function generateColors(count) {
+            const colors = [
+                '#4BC0C0', '#FF6384', '#36A2EB', '#FFCE56', '#9966FF',
+                '#FF9F40', '#4BCFFF', '#7ED321', '#B8E986', '#50E3C2',
+                '#FF5C72', '#C775E0', '#44D7B6', '#FFE082', '#A6D5FA'
+            ];
+            while (colors.length < count) {
+                colors.push('#' + Math.floor(Math.random() * 16777215).toString(16));
+            }
+            return colors.slice(0, count);
+        }
+
+        new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Holdings Breakdown',
+                    data: data,
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 0.2,
+                    backgroundColor: generateColors(labels.length),
+                    radius: '80%'  // controls chart circle size
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        display: true
+                    }
+                },
+                layout: {
+                    padding: 0
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Connect Wallet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% csrf_token %}
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <style>
+        body {
+            background: #0d1117;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        .wallet-box {
+            background: #161b22;
+            padding: 40px;
+            border-radius: 12px;
+            display: inline-block;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        button {
+            padding: 12px 25px;
+            background: #2f81f7;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1c65d1;
+        }
+    </style>
+</head>
+<body>
+    <div class="wallet-box">
+        <h2>Welcome to Crypto Dashboard</h2>
+        <p>Please connect your wallet to continue.</p>
+        <button onclick="connectWallet()">Connect Wallet</button>
+    </div>
+
+    <form id="walletForm" method="post" action="{% url 'wallet_login' %}" style="display:none;">
+        {% csrf_token %}
+        <input type="hidden" name="wallet_address" id="walletAddress">
+    </form>
+
+    <script>
+        async function connectWallet() {
+            if (typeof window.ethereum === 'undefined') {
+                alert("MetaMask is not installed!");
+                return;
+            }
+
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const wallet = accounts[0];
+
+                document.getElementById('walletAddress').value = wallet;
+                document.getElementById('walletForm').submit();
+            } catch (error) {
+                console.error("Wallet connection failed:", error);
+                alert("Connection failed. Please try again.");
+            }
+        }
+    </script>
+</body>
+</html>

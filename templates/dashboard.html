@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<!-- Required Libraries -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+
+<div class="container-fluid px-4 py-4 text-white" style="background-color: #111; min-height: 100vh;">
+    {% if user.is_authenticated %}
+    <!-- User stats section -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="bg-dark p-4 rounded shadow-sm">
+                <h5 class="text">Your Balance</h5>
+                <h3 class="text-success">${{ total_balance|floatformat:2 }}</h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-dark p-4 rounded shadow-sm">
+              <h5 class="text">Your Profit</h5>
+              <h3 class="{% if total_income >= 0 %}text-success{% else %}text-danger{% endif %}">
+                ${{ total_income|floatformat:2 }}
+              </h3>
+            </div>
+          </div>
+        <div class="col-md-4">
+            <div class="bg-dark p-4 rounded shadow-sm">
+                <h5 class="text">Total holding </h5>
+                <h3 class="text-success">${{ total_expense|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Market Overview Section -->
+    <section class="market-overview-section mb-5">
+        <h2 class="mb-4 text-light">
+            <i class="fas fa-globe me-2"></i> Crypto Market Overview
+        </h2>
+
+        <div class="card crypto-market-card bg-dark p-4 shadow-sm">
+            <!-- Market stats -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="market-stat-card p-3 rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-light">Total Market Cap</span>
+                            <i class="fas fa-coins text-warning"></i>
+                        </div>
+                        <h3 class="text-light mt-2 mb-0" id="totalMarketCap">--</h3>
+                        <div class="mt-1">
+                            <span class="badge" id="marketCapChange">--%</span>
+                            <span class="text-light ms-2" style="font-size: 0.8rem">24h change</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="market-stat-card p-3 rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-light">24h Volume</span>
+                            <i class="fas fa-exchange-alt text-info"></i>
+                        </div>
+                        <h3 class="text-light mt-2 mb-0" id="totalVolume">--</h3>
+                        <div class="mt-1">
+                            <span class="badge" id="volumeChange">--%</span>
+                            <span class="text-light ms-2" style="font-size: 0.8rem">vs yesterday</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="market-stat-card p-3 rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-light">BTC Dominance</span>
+                            <i class="fab fa-bitcoin text-orange"></i>
+                        </div>
+                        <h3 class="text-light mt-2 mb-0" id="btcDominance">--%</h3>
+                        <div class="mt-1">
+                            <span class="badge" id="dominanceChange">--%</span>
+                            <span class="text-light ms-2" style="font-size: 0.8rem">24h change</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Other market stats... -->
+            </div>
+
+            <!-- Chart container -->
+            <div class="chart-container mb-4">
+                <div id="marketHighChart" style="height: 300px;"></div>
+            </div>
+
+            <!-- Time period selector -->
+            <div class="d-flex justify-content-between">
+                <div class="btn-group btn-group-sm time-period-selector">
+                    <!-- Time period buttons -->
+                    <button class="btn btn-outline-secondary active" data-days="1">1D</button>
+                    <button class="btn btn-outline-secondary" data-days="7">7D</button>
+                    <button class="btn btn-outline-secondary" data-days="14">14D</button>
+                    <button class="btn btn-outline-secondary" data-days="30">1M</button>
+                    <button class="btn btn-outline-secondary" data-days="90">3M</button>
+                    <button class="btn btn-outline-secondary" data-days="365">1Y</button>
+                    <button class="btn btn-outline-secondary" data-days="1095">3Y</button>
+                    <button class="btn btn-outline-secondary" data-days="1825">5Y</button>
+                    <button class="btn btn-outline-secondary" data-days="max">Max</button>
+                </div>
+                <div class="dropdown">
+                    <!-- Metric dropdown -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cryptocurrencies Section -->
+    <section class="cryptocurrencies-section mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="fas fa-star me-2"></i> Top Traded Cryptocurrencies
+            </h2>
+            <div class="small text-light">
+                <i class="fas fa-sync-alt me-1"></i> Auto-updates every 30s
+            </div>
+        </div>
+        
+        <!-- Coins Container - This is where JS will render the coins -->
+        <div class="row g-4" id="coinsContainer">
+            <!-- Loading placeholder -->
+            <div class="col-12 text-center py-5" id="loadingPlaceholder">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-light mt-3">Loading top cryptocurrencies...</p>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'other_coins' %}" class="btn btn-outline-primary">View All Coins <i class="fas fa-arrow-right ms-2"></i></a>
+        </div>
+    </section>
+</div>
+
+<style>
+    .coin-card-hover {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .coin-card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        border-color: rgba(75, 192, 192, 0.5);
+    }
+
+    .market-stat-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .badge.positive {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+
+    .badge.negative {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+
+    .text-success {
+        color: #28a745 !important;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    #coinsContainer {
+        min-height: 400px;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+{% block title %}{{ name }} Details{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/coin_details.css' %}">
+<script src="{% static 'js/coin_details.js' %}"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<div class="container mt-5 text-white">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">{{ name }} <span class="text">({{ symbol|upper }})</span></h2>
+            <div class="small text">Live market data from Binance</div>
+        </div>
+        <img src="{{ image }}" alt="{{ name }}" width="64">
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="bg-dark p-4 rounded shadow-sm h-100">
+                <h6 class="text">Current Price</h6>
+                <h3 class="text-success" id="initialCoinPrice">${{ current_price|floatformat:2 }}</h3> 
+                <span class="badge {% if price_change_24h >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ price_change_24h|floatformat:2 }}%
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-dark p-4 rounded shadow-sm h-100">
+                <h6 class="text">Market Cap</h6>
+                <h4 class="text-success">{{ market_cap_display }}</h4>
+                <div class="small text">Total USD value</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-dark p-4 rounded shadow-sm h-100">
+                <h6 class="text">24h Range</h6>
+                <p class="mb-1">High: <span class="text-success">${{ high_24h|floatformat:2 }}</span></p>
+                <p class="mb-0">Low: <span class="text-danger">${{ low_24h|floatformat:2 }}</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-3">
+        <div class="col-md-6">
+            <div class="bg-dark p-4 rounded shadow-sm h-100">
+                <h6 class="text">Circulating Supply</h6>
+                <h5>{{ circulating_supply|floatformat:0|intcomma }}</h5>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="bg-dark p-4 rounded shadow-sm h-100">
+                <h6 class="text">Total Supply</h6>
+                <h5>{{ total_supply|floatformat:0|intcomma }}</h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="card crypto-price-card bg-dark p-4 mt-5 shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 text-light">
+            <i class="fas fa-chart-line me-2"></i> {{ name }} Price Chart
+        </h5>
+        <div class="badge bg-primary bg-opacity-25 text-primary" id="priceChartPeriod">Today</div>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+        <h3 class="text-light mb-0 me-2" id="currentPrice">--</h3>
+        <span class="badge" id="priceChange">--%</span>
+    </div>
+    <div class="chart-container" style="position: relative; height: 300px;">
+        <div id="highPriceChart" style="height: 300px;"></div>
+    </div>
+    <div class="d-flex justify-content-center mt-3">
+        <div class="btn-group btn-group-sm time-period-selector">
+            <button class="btn btn-outline-secondary active" data-days="1">Today</button>
+            <button class="btn btn-outline-secondary" data-days="7">7D</button>
+            <button class="btn btn-outline-secondary" data-days="14">14D</button>
+            <button class="btn btn-outline-secondary" data-days="30">1M</button>
+            <button class="btn btn-outline-secondary" data-days="90">3M</button>
+            <button class="btn btn-outline-secondary" data-days="365">1Y</button>
+            <button class="btn btn-outline-secondary" data-days="1095">3Y</button>
+            <button class="btn btn-outline-secondary" data-days="1825">5Y</button>
+            <button class="btn btn-outline-secondary" data-days="max">Max</button>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <button class="btn btn-success me-2" onclick="showModal('buy')">Buy</button>
+    <button class="btn btn-danger me-2" onclick="showModal('sell')">Sell</button>
+</div>
+
+<div id="tradeModal" class="modal-overlay d-none">
+    <div class="modal-content bg-dark text-white p-4 rounded shadow">
+        <h5 id="modalTitle">Trade</h5>
+        <form method="post" id="tradeForm">
+            {% csrf_token %}
+            <input type="hidden" name="symbol" value="{{ symbol }}">
+            <input type="hidden" name="price" id="modalCoinPrice" value="{{ current_price }}"> 
+
+            <div class="mb-3">
+                <label for="quantityInput" class="form-label">Quantity</label>
+                <input type="number" step="any" min="0" id="quantityInput" name="quantity" class="form-control" required oninput="updateTotal()">
+            </div>
+            <div class="mb-3">
+                <label>Total Price (USD):</label>
+                <div id="totalPrice" class="fw-bold">$0.00</div>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-secondary me-2" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% if error %}
+<div class="alert alert-warning mt-4 text-center">
+    <i class="fas fa-exclamation-triangle me-2"></i> {{ error }}
+</div>
+{% else %}
+{% endif %}
+{% endblock %}
