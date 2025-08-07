@@ -8,7 +8,6 @@ This project is a cryptocurrency platform built using Django and Web3. It allows
 - **Buy/Sell Coins**: Perform cryptocurrency transactions with live price updates.
 - **Borrow/Repay Funds**: Request and repay virtual USD funds.
 - **Transaction History**: View detailed transaction logs.
-- **Watchlist**: Manage a watchlist of favorite cryptocurrencies.
 - **Market Data**: Fetch live and historical market data.
 
 ## Technologies Used
