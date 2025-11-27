@@ -1,0 +1,12 @@
+
+> crypto_platform-backend@1.0.0 start
+> node server.js
+
+[dotenv@17.2.3] injecting env (2) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+🚀 Server running on port 5000
+📊 Environment: development
+✅ MongoDB connected
+✅ Connected to network: sepolia (chainId: 11155111)
+[DEBUG] Contract admin address: 0xdA46A64ab8c6BEda14677c49D2Bdd0fC4Bf7b72D
+[DEBUG] Backend WALLET_ADDRESS: 0x16d3ACbD38aa841DB2Da166041e99C9d3cb98750
+[WARNING] Backend wallet is NOT the contract admin. Admin-only functions will fail.

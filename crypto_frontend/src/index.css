@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 180 70% 60%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 16%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 180 70% 60%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 16%;
+    --ring: 217 91% 60%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  @keyframes scale-in {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+  }
+}
